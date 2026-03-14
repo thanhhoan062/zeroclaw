@@ -14,14 +14,25 @@ struct WebAssets;
 
 /// Serve static files from `/_app/*` path
 pub async fn handle_static(uri: Uri) -> impl IntoResponse {
-    let path = uri.path().strip_prefix("/_app/").unwrap_or(uri.path());
+    let path = uri
+        .path()
+        .strip_prefix("/_app/")
+        .unwrap_or(uri.path())
+        .trim_start_matches('/');
 
     serve_embedded_file(path)
 }
 
 /// SPA fallback: serve index.html for any non-API, non-static GET request
 pub async fn handle_spa_fallback() -> impl IntoResponse {
-    serve_embedded_file("index.html")
+    match WebAssets::get("index.html") {
+        Some(_) => serve_embedded_file("index.html"),
+        None => (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "Web dashboard not available. Build it with: cd web && npm ci && npm run build",
+        )
+            .into_response(),
+    }
 }
 
 fn serve_embedded_file(path: &str) -> impl IntoResponse {
