@@ -3460,6 +3460,10 @@ pub struct SlackConfig {
     /// cancels the in-flight request and starts a fresh response with preserved history.
     #[serde(default)]
     pub interrupt_on_new_message: bool,
+    /// When true, only respond to messages that @-mention the bot in groups.
+    /// Direct messages are always processed.
+    #[serde(default)]
+    pub mention_only: bool,
 }
 
 impl ChannelConfig for SlackConfig {
@@ -9519,5 +9523,22 @@ require_otp_to_resume = true
         assert_eq!(config.agents.len(), 2);
         assert_eq!(config.swarms.len(), 1);
         assert!(config.swarms.contains_key("pipeline"));
+    }
+
+    #[test]
+    async fn slack_config_deserializes_mention_only() {
+        let json = r#"{"bot_token":"xoxb-tok","mention_only":true}"#;
+        let parsed: SlackConfig = serde_json::from_str(json).unwrap();
+        assert!(parsed.mention_only);
+    }
+
+    #[test]
+    async fn slack_config_toml_deserializes_mention_only() {
+        let toml_str = r#"
+    bot_token = "xoxb-tok"
+    mention_only = true
+    "#;
+        let parsed: SlackConfig = toml::from_str(toml_str).unwrap();
+        assert!(parsed.mention_only);
     }
 }

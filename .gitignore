@@ -47,3 +47,4 @@ lcov.info
 
 # Wrangler cache
 .wrangler/
+.agents/
